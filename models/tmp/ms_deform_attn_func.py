@@ -26,9 +26,9 @@ def ms_deform_attn_core_pytorch(value, value_spatial_shapes, sampling_locations,
     allowing autograd to handle backward automatically.
 
     Args:
-        value:                (N, S, M, D_)  value projections
-        value_spatial_shapes: (L, 2)         [(H_0, W_0), (H_1, W_1), ...]
-        sampling_locations:   (N, Lq, M, L, P, 2)
+        value:                (N, S, M, D_)  value projections  # batch, all_scale_value_flatten, num_haed, head_dim
+        value_spatial_shapes: (L, 2)         [(H_0, W_0), (H_1, W_1), ...]   # num_scale,2
+        sampling_locations:   (N, Lq, M, L, P, 2)   # batch, num_querys, num_head, num_scale, num_sample_points, 2
         attention_weights:    (N, Lq, M, L, P)
 
     Returns:
@@ -41,7 +41,7 @@ def ms_deform_attn_core_pytorch(value, value_spatial_shapes, sampling_locations,
 
     sampling_grids = 2 * sampling_locations - 1
     sampling_value_list = []
-    for lid_, (H_, W_) in enumerate(value_spatial_shapes):
+    for lid_, (H_, W_) in enumerate(value_spatial_shapes):  # 对每个scale遍历
         # value_l_:  [N, H_*W_, M, D] -> [N, H_*W_, M*D] -> [N, M*D, H_*W] -> [N*M, D, H_, W_]
         value_l_ = value_list[lid_].flatten(2).transpose(1, 2).reshape(N_ * M_, D_, H_, W_)
         # sampling_grid_l_: [N, Lq, M, P, 2] -> [N, M, Lq, P, 2] -> [N*M, Lq, P, 2]
